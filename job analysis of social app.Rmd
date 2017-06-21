@@ -1,0 +1,292 @@
+---
+title: "交友軟體使用者之工作型態分析"
+author: "TING"
+date: "2017/6/15"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE }
+knitr::opts_chunk$set(echo = FALSE)
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(data.table)
+thm <- function() theme(text=element_text(size = 15, family = "STHeiti")) # 控制字體與大小
+# STHeiti是只有Mac才有的字體, 用來解決Mac系統中文顯示錯誤的問題
+# Windows系統的使用者請忽略 `+ thm()` 指令
+job <- read.csv("職稱清單.csv",
+                 header = F,
+                 sep = ",",
+                 fileEncoding = "BIG5") #此檔案為BIG5類型
+job1 <- read.csv("職稱清單1.csv",
+                 header = F,
+                 sep = ",",
+                 fileEncoding = "BIG5") #拆成兩個的原因是Ｒ無法全部讀取檔案
+job2 <- rbind(job,job1)
+colnames(job2) <- c("job","company")
+jobcount <- as.data.frame(table(job2$job)) #計算job次數
+help("arrange")
+jobcount1 <- arrange(jobcount,desc(Freq)) #由大到小排列job次數
+companycount <- as.data.frame(table(job2$company)) #計算company次數 
+  companycount1 <- arrange(companycount,desc(Freq)) #由大到小排列company次數 
+jobvar <- jobcount1 %>% select(Var1)
+write.table(jobvar, file = "jobvar.txt") #想要輸出看文件長怎樣，無解？
+jjob <- job2 %>%  select(job) #只挑選job這一行
+x <- matrix(nrow = 14, ncol = 2) #用陣列輸入，上次是直接key進excel
+x[1,1] <- "Boss" 
+x[1,2] <- sum(sum(table(grep("Boss",jjob$job))) %>% sum(table(grep("共同創辦人",jjob$job))) %>% 
+          sum(table(grep("小老闆",jjob$job))) %>% sum(table(grep("負責人",jjob$job))) %>% 
+          sum(table(grep("創業家",jjob$job))) %>% sum(table(grep("CEO",jjob$job))) %>% 
+          sum(table(grep("COO",jjob$job))) %>% sum(table(grep("總經理",jjob$job))) %>% 
+          sum(table(grep("總監",jjob$job))) %>% sum(table(grep("執行長",jjob$job))) %>% 
+          sum(table(grep("Founder",jjob$job))) %>% sum(table(grep("Co-founder",jjob$job))) %>% 
+          sum(table(grep("Owner",jjob$job))) %>% sum(table(grep("董事長",jjob$job))) %>% 
+          sum(table(grep("校長兼撞鐘",jjob$job))) %>% sum(table(grep("CTO",jjob$job))))
+x[2,1] <- "Manager"
+x[2,2] <- sum(sum(table(grep("課長",jjob$job))) %>% sum(table(grep("店長",jjob$job))) %>% 
+          sum(table(grep("副總",jjob$job))) %>% sum(table(grep("襄理",jjob$job))) %>% 
+          sum(table(grep("協理",jjob$job))) %>% sum(table(grep("領班",jjob$job))) %>% 
+          sum(table(grep("主任",jjob$job))) %>% sum(table(grep("副理",jjob$job))) %>% 
+          sum(table(grep("組長",jjob$job))) %>% sum(table(grep("Manager",jjob$job))) %>% 
+          sum(table(grep("儲備幹部",jjob$job))))
+x[3,1] <- "工程師"
+x[3,2] <- sum(sum(table(grep("工程師",jjob$job))) %>% sum(table(grep("Engineer",jjob$job)))
+      %>% sum(table(grep("engineer",jjob$job))) %>% sum(table(grep("程式",jjob$job))))
+x[4,1] <- "業務"
+x[4,2] <- sum(sum(table(grep("業務",jjob$job))) %>% sum(table(grep("銷售",jjob$job))) %>% 
+          sum(table(grep("sales",jjob$job))) %>% sum(table(grep("sale",jjob$job))) %>% 
+          sum(table(grep("Sales",jjob$job))))
+x[5,1] <- "助理"
+x[5,2] <- sum(sum(table(grep("助理",jjob$job))) %>% sum(table(grep("秘書",jjob$job))) %>% 
+          sum(table(grep("Assistant",jjob$job))) %>% sum(table(grep("行政",jjob$job))) %>% 
+          sum(table(grep("會計",jjob$job))) %>% sum(table(grep("採購",jjob$job))) %>% 
+          sum(table(grep("特助",jjob$job))) %>% sum(table(grep("客服",jjob$job))) %>% 
+          sum(table(grep("編輯",jjob$job))) %>% sum(table(grep("櫃檯",jjob$job))) %>% 
+          sum(table(grep("財務",jjob$job))) %>% sum(table(grep("總務",jjob$job))))
+x[6,1] <- "設計"
+x[6,2] <- sum(sum(table(grep("設計",jjob$job))) %>% sum(table(grep("Designer",jjob$job))) %>% 
+          sum(table(grep("designer",jjob$job))) %>% sum(table(grep("design",jjob$job))) %>% 
+          sum(table(grep("Design",jjob$job))) %>% sum(table(grep("美編",jjob$job))))
+x[7,1] <- "R&D"
+x[7,2] <- sum(sum(table(grep("R&D",jjob$job))) %>% sum(table(grep("研發",jjob$job))) %>% 
+          sum(table(grep("研究員",jjob$job))) %>% sum(table(grep("RD",jjob$job))))
+x[8,1] <- "公關"
+x[8,2] <- sum(sum(table(grep("公關",jjob$job))) %>% sum(table(grep("行銷",jjob$job))) %>% 
+          sum(table(grep("企劃",jjob$job))) %>% sum(table(grep("PM",jjob$job))) %>% 
+          sum(table(grep("Marketing",jjob$job))) %>% sum(table(grep("Project",jjob$job))))
+x[9,1] <- "顧問"
+x[9,2] <- sum(sum(table(grep("顧問",jjob$job))) %>% sum(table(grep("consulting",jjob$job))) %>% 
+          sum(table(grep("Consultant",jjob$job))) %>% sum(table(grep("Consulting",jjob$job))) %>% 
+          sum(table(grep("consultant",jjob$job))))
+x[10,1] <- "技術員"
+x[10,2] <- sum(sum(table(grep("技術員",jjob$job))) %>% sum(table(grep("技師",jjob$job))) %>% 
+            sum(table(grep("工人",jjob$job))) %>% sum(table(grep("工務",jjob$job))) %>%
+            sum(table(grep("作業員",jjob$job))) %>% sum(table(grep("技術師",jjob$job))))
+x[11,1] <- "勞工"
+x[11,2] <- sum(sum(table(grep("勞工",jjob$job))) %>% sum(table(grep("員工",jjob$job))) %>% 
+            sum(table(grep("打雜",jjob$job))) %>% sum(table(grep("專員",jjob$job))) %>% 
+            sum(table(grep("服務員",jjob$job))) %>% sum(table(grep("店員",jjob$job))) %>% 
+            sum(table(grep("職員",jjob$job))) %>% sum(table(grep("上班族",jjob$job))) %>% 
+            sum(table(grep("內勤",jjob$job))) %>% sum(table(grep("實習生",jjob$job))) %>% 
+            sum(table(grep("正職",jjob$job))) %>% sum(table(grep("雜工",jjob$job))) %>% 
+            sum(table(grep("菜鳥",jjob$job))) %>% sum(table(grep("學徒",jjob$job))) %>% 
+            sum(table(grep("外場",jjob$job))) %>% sum(table(grep("內場",jjob$job))) %>% 
+            sum(table(grep("門市",jjob$job))) %>% sum(table(grep("staff",jjob$job))) %>% 
+            sum(table(grep("行員",jjob$job))) %>% sum(table(grep("人員",jjob$job))))
+x[12,1] <- "待業"
+x[12,2] <- sum(sum(table(grep("待業",jjob$job))) %>% sum(table(grep("無",jjob$job))))
+
+x[13,1] <- "管理"
+x[13,2] <- sum(sum(table(grep("HR",jjob$job))) %>% sum(table(grep("人資",jjob$job))) %>% 
+            sum(table(grep("人力資源",jjob$job))) %>% sum(table(grep("Human resourse",jjob$job)))%>%
+            sum(table(grep("倉管",jjob$job))) %>% sum(table(grep("品管",jjob$job))) %>% 
+            sum(table(grep("管理",jjob$job))))
+x[14,1] <- "打雜"
+x[14,2] <- sum(sum(table(grep("打雜",jjob$job))) %>% sum(table(grep("實習生",jjob$job))) %>% 
+            sum(table(grep("雜工",jjob$job))) %>%  sum(table(grep("菜鳥",jjob$job))) %>%
+            sum(table(grep("學徒",jjob$job))) %>% sum(table(grep("外場",jjob$job))) %>% sum(table(grep("內場",jjob$job))) %>% 
+            sum(table(grep("門市",jjob$job))))
+
+x
+x1 <- data.frame(x) #將x的型態轉成data.frame
+colnames(x1) <- c("job","var") #給名稱
+sapply(x1,class) #檢查型態
+x2 <- transform(x1, var = as.character(var)) #將var的型態轉成numeric前，要先轉成character
+sapply(x2,class) #檢查型態
+x3 <- transform(x2, var = as.numeric(var)) #轉成numeric
+sapply(x3,class) #檢查型態
+x4 <- arrange(x3,desc(var)) #由大到小排列
+ggplot(x4,aes(x = reorder(job,var), y = var, fill = job)) + #reorder根據職務類別由大到小排列
+  geom_bar(stat = 'identity')  +
+  thm()  + coord_flip() + labs(titles= NULL,x = "職業類別",y = "人數")
+
+cccompany <- job2 %>% select(company) #只挑選company這一行
+y <- matrix(nrow = 17, ncol = 2) #做出一個17,2的陣列
+y[1,1] <- "學生"
+y[1,2] <- sum(sum(table(grep("學生",cccompany$company))) %>% sum(table(grep("大學",cccompany$company))) %>%
+          sum(table(grep("NTU",cccompany$company))) %>% sum(table(grep("NTHU",cccompany$company))) %>% 
+          sum(table(grep("台大",cccompany$company))) %>% sum(table(grep("研究所",cccompany$company))) %>% 
+          sum(table(grep("成大",cccompany$company))) %>% sum(table(grep("政大",cccompany$company))) %>% 
+          sum(table(grep("NCTU",cccompany$company))))
+y[2,1] <- "設計"
+y[2,2] <- sum(sum(table(grep("廣告",cccompany$company))) %>% sum(table(grep("設計",cccompany$company))) %>% 
+          sum(table(grep("出版社",cccompany$company))) %>% sum(table(grep("Media",cccompany$company))))
+y[3,1] <- "服務業"
+y[3,2] <- sum(sum(table(grep("服務",cccompany$company))) %>% sum(table(grep("飯店",cccompany$company))) %>% 
+          sum(table(grep("旅行社",cccompany$company))) %>% sum(table(grep("旅遊",cccompany$company))) %>% 
+          sum(table(grep("百貨",cccompany$company))) %>% sum(table(grep("麥當勞",cccompany$company))) %>% 
+          sum(table(grep("服飾",cccompany$company))) %>% sum(table(grep("咖啡",cccompany$company))) %>% 
+          sum(table(grep("新光三越",cccompany$company))))
+y[4,1] <- "網路科技"
+y[4,2] <- sum(sum(table(grep("科技",cccompany$company))) %>% sum(table(grep("南科",cccompany$company))) %>% 
+          sum(table(grep("遊戲",cccompany$company))) %>% sum(table(grep("網路",cccompany$company))) %>% 
+          sum(table(grep("軟體",cccompany$company))) %>% sum(table(grep("電商",cccompany$company))) %>% 
+          sum(table(grep("中科",cccompany$company))) %>% sum(table(grep("網拍",cccompany$company))) %>% 
+          sum(table(grep("電腦",cccompany$company))) %>% sum(table(grep("資訊",cccompany$company))))
+y[5,1] <- "教育"
+y[5,2] <- sum(sum(table(grep("教育",cccompany$company))) %>% sum(table(grep("補習",cccompany$company))) %>% 
+          sum(table(grep("老師",cccompany$company))) %>% sum(table(grep("補教",cccompany$company))) %>% 
+          sum(table(grep("school",cccompany$company))) %>% sum(table(grep("School",cccompany$company))))
+y[6,1] <- "自由業"
+y[6,2] <- sum(sum(table(grep("自由",cccompany$company))) %>% sum(table(grep("freelancer",cccompany$company))) %>% 
+          sum(table(grep("Freelancer",cccompany$company))))
+y[7,1] <- "金融"
+y[7,2] <- sum(sum(table(grep("金融",cccompany$company))) %>% sum(table(grep("銀行",cccompany$company))) %>% 
+          sum(table(grep("bank",cccompany$company))) %>% sum(table(grep("Bank",cccompany$company))))
+y[8,1] <- "製造業"
+y[8,2] <- sum(sum(table(grep("製造",cccompany$company))) %>% sum(table(grep("工廠",cccompany$company))) %>% 
+          sum(table(grep("傳產",cccompany$company))) %>% sum(table(grep("物流",cccompany$company))) %>% 
+          sum(table(grep("營造",cccompany$company))) %>% sum(table(grep("建設",cccompany$company))) %>% 
+          sum(table(grep("傳統產業",cccompany$company))) %>% sum(table(grep("建築",cccompany$company))) %>% 
+          sum(table(grep("藥廠",cccompany$company))) %>% sum(table(grep("房地產",cccompany$company))) %>% 
+          sum(table(grep("紡織",cccompany$company))) %>% sum(table(grep("機械",cccompany$company))))
+y[9,1] <- "醫療"
+y[9,2] <- sum(sum(table(grep("醫院",cccompany$company))) %>% sum(table(grep("醫療",cccompany$company))) %>% 
+          sum(table(grep("診所",cccompany$company))) %>% sum(table(grep("hospital",cccompany$company))) %>% 
+          sum(table(grep("Hospital",cccompany$company))))
+y[10,1] <- "電子"
+y[10,2] <- sum(sum(table(grep("電子",cccompany$company))) %>% sum(table(grep("IT",cccompany$company))) %>% 
+          sum(table(grep("TSMC",cccompany$company))) %>% sum(table(grep("半導體",cccompany$company))) %>% 
+          sum(table(grep("台積電",cccompany$company))))
+y[11,1] <- "食品餐飲"
+y[11,2] <- sum(sum(table(grep("食品",cccompany$company))) %>% sum(table(grep("餐廳",cccompany$company))) %>% 
+            sum(table(grep("餐飲",cccompany$company))) %>% sum(table(grep("Restaurannt",cccompany$company))))
+y[12,1] <- "貿易"
+y[12,2] <- sum(sum(table(grep("貿易",cccompany$company))) %>% sum(table(grep("外商",cccompany$company))) %>% 
+            sum(table(grep("日商",cccompany$company))) %>% sum(table(grep("美商",cccompany$company))))
+y[13,1] <- "人壽" 
+y[13,2] <- sum(sum(table(grep("人壽",cccompany$company))) %>% sum(table(grep("富邦",cccompany$company))) %>% 
+            sum(table(grep("三商美邦",cccompany$company))) %>% sum(table(grep("保險",cccompany$company))))
+y[14,1] <- "公家機關"
+y[14,2] <- sum(sum(table(grep("公家",cccompany$company))) %>% sum(table(grep("公職",cccompany$company))) %>% 
+            sum(table(grep("政府",cccompany$company))) %>% sum(table(grep("公務員",cccompany$company))))
+y[15,1] <- "軍職"
+y[15,2] <- sum(sum(table(grep("軍",cccompany$company))) %>% sum(table(grep("替代役",cccompany$company))) %>% 
+            sum(table(grep("國家",cccompany$company))) %>% sum(table(grep("兵",cccompany$company))))
+y[16,1] <- "事務所"
+y[16,2] <- sum(sum(table(grep("事務所",cccompany$company))) %>% sum(table(grep("律師",cccompany$company))) %>% 
+            sum(table(grep("會計師",cccompany$company))))
+y[17,1] <- "新創"
+y[17,2] <- sum(sum(table(grep("新創",cccompany$company))) %>% sum(table(grep("工作室",cccompany$company))) %>% 
+            sum(table(grep("Soho",cccompany$company))) %>% sum(table(grep("soho",cccompany$company))))
+#sum(sum(table(grep("顧問",cccompany$company)))) 放棄統計，無法歸類
+#sum(sum(table(grep("攝影",cccompany$company)))) 
+#sum(sum(table(grep("司機",cccompany$company))))
+#sum(sum(table(grep("電信業",cccompany$company))))
+
+y
+y1 <- data.frame(y) #將x的型態轉成data.frame
+colnames(y1) <- c("company","var") #給名稱
+sapply(y1,class) #檢查型態
+y2 <- transform(y1, var = as.character(var)) #將var的型態轉成numeric前，要先轉成character
+sapply(y2,class) #檢查型態
+y3 <- transform(y2, var = as.numeric(var)) #轉成numeric
+sapply(y3,class) #檢查型態
+y4 <- arrange(y3,desc(var)) #由大到小排列
+p = ggplot(y4,aes(x = reorder(company,var), y = var, fill = company)) + #reorder根聚行業類別由大到小排列
+  geom_bar(stat = 'identity')  +
+  thm()  + coord_flip() + labs(titles= NULL,x = "行業類別",y = "人數")
+
+```
+
+## 數據形態：
+```{r, echo = FALSE}
+head(job2, 10)
+
+```
+
+
+## 數據攫取原理：
+
+  我先將所有資料以不區分字詞的方式從大到小排列，並從中抓取出現超過十次的字詞作為分群的底線，我從這些出現超過十次的字詞做分類分群，得出以下的結果**（職業類別&行業類別）**。
+  
+  
+  有些字詞會是重複並且相關的，那我只需要讀取關鍵字即可抓出總次數，例如:”設計”出現88次，”設計師”出現 250次，我只需要讀取”設計”即可抓出88+250=338次。(只要是相關的就會歸類在一群)
+```{r, echo = FALSE}
+colnames(jobcount1) = c("job","var")
+head(jobcount1, 10)
+```
+
+
+## job欄位分析原理：
+
+**job**我將此欄位定義為職業類別，此類別表示個人擔任之工作或職務，在一間公司中，是由各個大大小小的螺絲釘所組成的，我將類似以及同性質的工作類型區分為一群，以及沒有顯示特別專業只說明職稱的人區分為一類，以此可看出，大約是哪些工作類型的人在使交友軟體。
+
+
+## 職業類別：個人擔任之工作或職務
+
+#####1.Boss/共同創辦人/小老闆/負責人/創業家/Co-Founder/CEO/COO/總經理/總監/執行長/Founder/董事長/校長兼撞鐘/CTO
+#####2.Manager/課長/店長/副總/襄理/協理/領班/主任/副理/組長/儲備幹部
+#####3.工程師/Engineer/程式
+#####4.業務/銷售/Sales
+#####5.助理/秘書/行政/會計/採購/特助/客服/編輯/櫃檯/財務/總務
+#####6.設計/美編
+#####7.R&D/研發/RD
+#####8.公關/行銷/企劃
+#####9.顧問/Consultant
+#####10.技術員/技師/工人/工務/作業員/技術師
+#####11.勞工/員工/專員/服務員/店員/職員/上班族/內勤/正職/行員/人員
+#####12.打雜/實習生/雜工/菜鳥/學徒/外場/內場/門市
+#####13.待業/無
+#####14.管理/倉管/品管
+
+
+## 長條圖
+
+```{r ,echo = FALSE}
+ggplot(x4,aes(x = reorder(job,var), y = var )) + #reorder根據職務類別由大到小排列
+  geom_bar(stat = 'identity', colour = "black" , fill = "gray")  + geom_text(aes(label=var), vjust = 0.5, hjust = 1 ,   color="yellow")  + thm()  + coord_flip() + labs(titles= NULL, x = NULL ,y = "人數")
+```
+
+## company欄位分析原理
+
+**company** 我將此欄位定義為行業類別，此類別表示經濟活動部門之種類，我將類似的產業類別區分為一群，以此可看出，大約是哪些產業類別的人在使用Eatgether。
+
+## 行業類別：經濟活動部門之種類
+
+######1.學生/大學/NTU/NTHU/台大/研究所/成大/政大/NCTU
+######2.廣告/設計/出版社/Media
+######3.服務/飯店/旅行社/旅遊/百貨/麥當勞/服飾/咖啡/新光三越
+######4.科技/南科/遊戲/網路/軟體/電商/中科/網拍/電腦/資訊
+######5.教育/補習班/老師/School/補教
+######6.自由/Freelancer
+######7.金融/銀行/Bank
+######8.製造/工廠/傳產/物流/營造/建設/傳統產業/建築/藥廠/房地產/紡織/機械
+######9.醫院/醫療/診所
+######10.電子/IT/TSMC/半導體/台積電
+######11.餐廳/餐飲/食品
+######12.貿易/外商/日商/美商
+######13.人壽/富邦/三商美邦/保險
+######14.公家/公職/政府/公務員
+######15.替代役/軍/國家/兵
+######16.事務所/律師/會計師
+######17.新創/工作室/Soho
+
+## 長條圖
+
+```{r , echo = FALSE}
+ggplot(y4,aes(x = reorder(company,var), y = var )) + #reorder根據職務類別由大到小排列
+  geom_bar(stat = 'identity', colour = "black" , fill = "gray")  + geom_text(aes(label=var), vjust = 0.5, hjust = 1 ,   color="yellow")  + thm()  + coord_flip() + labs(titles= NULL, x = NULL ,y = "人數")
+```
+
+
