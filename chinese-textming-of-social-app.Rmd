@@ -1,0 +1,153 @@
+---
+title: "文字探勘"
+author: "TING"
+date: "2017/6/17"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(rJava)
+library(Rwordseg)
+library(tm) # 啟用Corpus使用
+library(tmcn)  
+library(rjson)
+library(tm)
+library(wordcloud)
+thm <- function() theme(text=element_text(size = 15, family = "STHeiti")) # 控制字體與大小
+# STHeiti是只有Mac才有的字體, 用來解決Mac系統中文顯示錯誤的問題
+par(family=("Heiti TC Light")) #中文字體
+segmentCN("操你媽")  # 測試
+
+data <- read.table("textminig/e.txt", sep=",") #讀入原始資料看型態
+d.corpus <- Corpus(DirSource(directory ="textminig/"), list(language = NA)) # 讀取文字檔(ANSI)，指定到資料夾層級) 
+toSpace <- content_transformer(function(x, pattern) { # 移除可能有問題的符號
+  return (gsub(pattern, " ", x))
+}
+)
+d.corpus <- tm_map(d.corpus, toSpace, "-")
+d.corpus <- tm_map(d.corpus, toSpace, "’")
+d.corpus <- tm_map(d.corpus, toSpace, "‘")
+d.corpus <- tm_map(d.corpus, toSpace, "•")
+d.corpus <- tm_map(d.corpus, toSpace, "”")
+d.corpus <- tm_map(d.corpus, toSpace, "“")
+d.corpus <- tm_map(d.corpus, removePunctuation) # 移除標點符號
+d.corpus <- tm_map(d.corpus, removeNumbers) # 移除數字
+d.corpus <- tm_map(d.corpus, stripWhitespace) # 移除空格
+d.corpus <- tm_map(d.corpus, function(word) {
+  gsub("[A-Za-z0-9]", "", word)
+})  # 移除大小寫英文
+
+d.corpus <- tm_map(d.corpus, function(word) {
+  gsub("旅遊","旅行",word)
+})
+
+insertWords(c("旅遊","宅","腐","動漫"),save = TRUE)  
+
+d.corpus <- tm_map(d.corpus, segmentCN, nature = TRUE) # 進行中文斷詞
+
+n.corpus <- tm_map(d.corpus, function(sentence) { # 用名詞暫存n.corpus
+  noun <- lapply(sentence, function(w) {
+    w[names(w) == "n"]
+  })
+  unlist(noun)
+}) # 選取名詞
+
+v.corpus <- tm_map(d.corpus, function(sentence) { # 用動詞暫存v.corpus
+  v <- lapply(sentence, function(w) {
+    w[names(w) == "v"]
+  })
+  unlist(v)
+}) # 選取動詞
+
+a.corpus <- tm_map(d.corpus, function(sentence) { # 用形容詞暫存a.corpus
+  adj <- lapply(sentence, function(w) {
+    w[names(w) == "a"]
+  })
+  unlist(adj)
+}) # 選取形容詞
+
+
+myStopWords <- c(stopwordsCN(), "覺得","算是","喜歡","希望","認識","應該","還有","起來","能夠","方面","來自","時候","沒有"
+                 ,"人","聊","想","會","來","事","去","讓","休","交") #ban動.名詞
+n.corpus <- tm_map(n.corpus, removeWords, myStopWords)
+
+v.corpus <- tm_map(v.corpus, removeWords, myStopWords)
+
+a.corpus <- tm_map(a.corpus, removeWords, myStopWords)
+
+
+
+
+#inspect(n.corpus)
+n.corpus <- tm_map(n.corpus, PlainTextDocument)
+n.corpus <- Corpus(VectorSource(n.corpus)) # 名詞轉向量矩陣
+
+v.corpus <- tm_map(v.corpus, PlainTextDocument)
+v.corpus <- Corpus(VectorSource(v.corpus)) # 動詞轉向量矩陣
+
+a.corpus <- tm_map(a.corpus, PlainTextDocument)
+a.corpus <- Corpus(VectorSource(a.corpus)) # 形容詞轉向量矩陣
+#inspect(n.corpus)
+
+tdmn <- TermDocumentMatrix(n.corpus, control = list(wordLengths = c(2, Inf))) #名詞字串至少二個字以上
+#inspect(tdmn)
+tdmv <- TermDocumentMatrix(v.corpus, control = list(wordLengths = c(2, Inf))) #動詞字串至少二個字以上
+#inspect(tdmv)
+
+tdma <- TermDocumentMatrix(a.corpus, control = list(wordLengths = c(2, Inf))) #形容詞字串至少兩個字以上
+#inspect(dtm[1:100,1])
+
+n1 <- as.matrix(tdmn) #儲存名詞成a.matrix
+n2 <- sort(rowSums(n1), decreasing = TRUE) 
+n3 <- data.frame(word = names(n2), freq = n2)
+
+v1 <- as.matrix(tdmv) #儲存動詞成a.matrix
+v2 <- sort(rowSums(v1), decreasing = TRUE)
+v3 <- data.frame(word = names(v2), freq = v2)
+
+a1 <- as.matrix(tdma) #儲存形容詞成a.matrix
+a2 <- sort(rowSums(a1), decreasing = TRUE) 
+a3 <- data.frame(word = names(a2), freq = a2)
+
+data_rbind<-rbind(n3, v3, a3) #按列合併
+class(data_rbind$freq) #檢查型態
+#textage41 <- data_rbind %>%  #由大到小排列
+ # arrange(desc(freq))
+
+#library(wordcloud)
+#par(family=("Heiti TC Light"))
+#wordcloud(data_rbind$word, data_rbind$freq, min.freq = 200, random.order = F, ordered.colors = F, colors = rainbow(length(row.names(n1))))
+
+
+
+```
+
+## 探勘動機
+
+使用者在填寫交友軟體報名表時，能夠不限格式的輸入自我介紹以及想要聊天的主題，根據筆者的觀察，使用者的自我介紹和想要聊天的主題通常都是息息相關的，藉此我以不區分的方式，直接進行中文探勘，希望能夠了解使用者對於哪些事情最感興趣，大概都是哪些類型的人喜歡使用此交友軟體來認識朋友。
+
+## 資料原始型態
+
+```{r}
+
+head(data$V1, 10)
+
+```
+
+
+
+## 探勘原理
+ 
+首先我們要先將標點符號、英文數字、空格等字元屏蔽掉，接下來則進入中文斷詞，分別根據名詞、動詞、形容詞做個別的儲存，在此選擇兩個字以上的詞才列入統計範圍內，例如："書"則不會被計入，但"書籍"則會被計入，接下來則將統計結果做成文字雲，文字愈大的詞則代表在此資料中出現最多次，以此類推。
+
+## 文字雲
+
+```{r , echo = FALSE}
+par(family=("Heiti TC Light"))
+wordcloud(data_rbind$word, data_rbind$freq, min.freq = 200, random.order = F, ordered.colors = F, colors = rainbow(length(row.names(n1))))  
+```
+
+## 結論
+
+可以明確地看出前三大主軸分別為1.旅行2.電影3.運動，再者則是美食、音樂、興趣等，具備豐富的旅行經驗，充沛的電影知識，健康的運動習慣，似乎已經是現代人必備的條件之一，所有人或多或少都擁有其中一項，這也間接的說明，若是想要與陌生人展開一個全新的話題，從這三項開始著手成功率應該最為顯著。
